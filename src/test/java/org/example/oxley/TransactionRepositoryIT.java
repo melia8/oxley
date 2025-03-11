@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-public class TransactionRepositoryTest {
+public class TransactionRepositoryIT {
 
     static final String[] TRANSACTION1 =
             "Coca Cola, Tesco, A1235, e1c7343e-101e-42ff-b26c-c9e2d441a351, 2024-01-01, 123.1111, 1000.50"
