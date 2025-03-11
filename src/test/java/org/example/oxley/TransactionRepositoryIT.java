@@ -102,4 +102,30 @@ public class TransactionRepositoryIT {
                 BigDecimal.valueOf(Double.parseDouble(fields[6].trim()))
         );
     }
+
+    @Test
+    void deleteAllTransactions_returnsSuccessfully() {
+        Transaction transaction1 = transactionRepository.save(createTransaction(TRANSACTION1));
+        Transaction transaction2 = transactionRepository.save(createTransaction(TRANSACTION2));
+        Transaction transaction3 = transactionRepository.save(createTransaction(TRANSACTION3));
+        Transaction transaction4 = transactionRepository.save(createTransaction(TRANSACTION4));
+        Transaction transaction5 = transactionRepository.save(createTransaction(TRANSACTION5));
+
+        List<Transaction> transactions = transactionRepository.findAll();
+
+        assertThat(transactions).containsExactlyInAnyOrder(
+                transaction1,
+                transaction2,
+                transaction3,
+                transaction4,
+                transaction5
+        );
+
+       transactionRepository.deleteAll();
+
+        List<Transaction> remainingTransactions = transactionRepository.findAll();
+
+        assertThat(remainingTransactions).isEmpty();
+
+    }
 }

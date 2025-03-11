@@ -7,19 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,6 +29,10 @@ public class TransactionControllerTest {
 
     @Autowired
     MockMvc mockMvc;
+
+
+    @Value( "${jwt.secretKey}" )
+    String secretKey;
 
     @MockitoBean
     TransactionService transactionService;
@@ -57,7 +62,7 @@ public class TransactionControllerTest {
                 """.formatted(manufacturer, retailerId, productCode, transactionId, transactionDate, quantity, value);
 
 
-        mockMvc.perform(post("/transaction")
+        mockMvc.perform(post("/transactions")
                         .content(input)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -95,7 +100,7 @@ public class TransactionControllerTest {
 
         when(transactionService.addTransaction(any())).thenReturn(response);
 
-        mockMvc.perform(post("/transaction")
+        mockMvc.perform(post("/transactions")
                         .content(input)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -119,7 +124,7 @@ public class TransactionControllerTest {
 
         when(transactionService.getAllTransactions()).thenReturn(response);
 
-        mockMvc.perform(get("/transaction")
+        mockMvc.perform(get("/transactions")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].manufacturer").value(transaction1[0]))
@@ -141,7 +146,7 @@ public class TransactionControllerTest {
 
     @Test
     void invalidUrl_returnsNotFound() throws Exception {
-        mockMvc.perform(get("/transaction/invalid")
+        mockMvc.perform(get("/transactions/invalid")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(404))
                 .andExpect(jsonPath("$.message").value("Could not find object"));
@@ -149,11 +154,32 @@ public class TransactionControllerTest {
 
     @Test
     void invalidPostBody_returnsNotFound() throws Exception {
-        mockMvc.perform(post("/transaction")
+        mockMvc.perform(post("/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().is(400))
                 .andExpect(jsonPath("$.message").value("Bad request"));
+    }
+
+    @Test
+    void delete_validAdminToken_success() throws Exception {
+        String jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiJ9.U5uekccSES74PO9gGPdHUJLyjf9qIG0mRtQ6IPx1hDM";
+
+        when(transactionService.getAllTransactions()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(delete("/transactions")
+                        .header("Authorization", "Bearer %s".formatted(jwt)))
+                .andExpect(status().is(204));
+    }
+
+    @Test
+    void delete_invalidAdminToken_success() throws Exception {
+        String jwt = "INVALIDGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiJ9.U5uekccSES74PO9gGPdHUJLyjf9qIG0mRtQ6IPx1hDM";
+
+        mockMvc.perform(delete("/transactions")
+                        .header("Authorization", "Bearer %s".formatted(jwt)))
+                .andExpect(status().is(403))
+                .andExpect(jsonPath("$.message").value("Forbidden"));
     }
 
     TransactionResponseDto createTransactionResponseDto(String[] fields) {

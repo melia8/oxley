@@ -27,6 +27,5 @@ public record SearchDataDto(
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate endDate,
 
-    @NotEmpty
     SearchType sum
 ) {}

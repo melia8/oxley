@@ -48,4 +48,8 @@ public class TransactionService {
                 .getSum(transactions);
 
     }
+
+    public void deleteTransactions() {
+        transactionRepository.deleteAll();
+    }
 }
