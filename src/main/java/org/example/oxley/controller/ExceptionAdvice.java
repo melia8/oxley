@@ -1,6 +1,7 @@
 package org.example.oxley.controller;
 
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.security.SecurityException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,7 +43,7 @@ public class ExceptionAdvice {
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad request");
     }
 
-    @ExceptionHandler(value={JwtException.class, MissingRequestHeaderException.class})
+    @ExceptionHandler(value={SecurityException.class, MissingRequestHeaderException.class})
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse forbidden(Exception ex) {
         return new ErrorResponse(HttpStatus.FORBIDDEN.value(), "Forbidden");

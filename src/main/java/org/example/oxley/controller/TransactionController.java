@@ -47,13 +47,22 @@ public class TransactionController {
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void  deleteAllTransactions(@RequestHeader(value="Authorization") String token) {
+        if (decodeToken(token).equals("Auth")) {
+            transactionService.deleteTransactions();
+        }
+    }
+
+    private String decodeToken(String token) throws SecurityException{
         SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecretKey));
         String jwt = token.split(" ")[1];
-        if (Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt).getPayload().getSubject().equals("admin")) {
-            transactionService.deleteTransactions();
-        } else {
+        String role = "";
+
+        try {
+            role = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt).getPayload().getSubject();
+        } catch(Exception ex) {
             throw new SecurityException("Invalid JWT token");
         }
 
+        return role;
     }
 }
